@@ -29,7 +29,7 @@ impl<T> MemoryEditor<T> {
             if self.frame_data.memory_range_combo_box_enabled {
                 let selected_address_range = &mut self.options.selected_address_range;
                 let address_ranges = &self.address_ranges;
-                egui::ComboBox::from_label("Memory Region").width(90.0).selected_text(selected_address_range.clone()).show_ui(ui, |ui| {
+                egui::ComboBox::from_label("Region").width(90.0).selected_text(selected_address_range.clone()).show_ui(ui, |ui| {
                     address_ranges.iter().for_each(|(range_name, _)| {
                         ui.selectable_value(selected_address_range, range_name.clone(), range_name);
                     });
