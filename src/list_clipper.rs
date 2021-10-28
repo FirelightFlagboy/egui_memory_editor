@@ -19,7 +19,7 @@ impl ClippedScrollArea {
     #[allow(dead_code)]
     pub fn from_max_height(max_lines: usize, line_height: f32, max_height: f32) -> Self {
         Self {
-            scroll_area: ScrollArea::from_max_height(max_height),
+            scroll_area: ScrollArea::vertical().max_height(max_height),
             clipper: ScrollAreaClipper::new(max_lines, line_height),
         }
     }

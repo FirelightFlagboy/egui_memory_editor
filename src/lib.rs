@@ -83,7 +83,7 @@ impl<T> MemoryEditor<T> {
 
         Window::new(self.window_name.clone())
             .open(&mut is_open)
-            .scroll(false)
+            .vscroll(false)
             .resizable(true)
             .show(ctx, |ui| {
                 self.shrink_window_ui(ui);
