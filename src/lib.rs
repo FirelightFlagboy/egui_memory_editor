@@ -7,7 +7,7 @@
 use std::collections::BTreeMap;
 use std::ops::Range;
 
-use egui::{Align, CtxRef, Label, Layout, TextEdit, Ui, Vec2, Window, Sense};
+use egui::{Align, CtxRef, Label, Layout, RichText, Sense, TextEdit, Ui, Vec2, Window};
 
 use crate::option_data::{BetweenFrameData, MemoryEditorOptions};
 
@@ -99,7 +99,10 @@ impl<T> MemoryEditor<T> {
     ///
     /// Use [`Self::window_ui`] if you want to have a window with the contents instead.
     pub fn draw_editor_contents(&mut self, ui: &mut Ui, memory: &mut T) {
-        assert!(!self.address_ranges.is_empty(), "At least one address range needs to be added to render the contents!");
+        assert!(
+            !self.address_ranges.is_empty(),
+            "At least one address range needs to be added to render the contents!"
+        );
 
         self.draw_options_area(ui, memory);
 
@@ -136,9 +139,9 @@ impl<T> MemoryEditor<T> {
 
                         for start_row in line_range.clone() {
                             let start_address = address_space.start + (start_row * column_count);
-                            ui.add(
-                                Label::new(format!("0x{:01$X}:", start_address, address_characters))
-                                    .text_color(address_text_colour)
+                            ui.colored_label(
+                                address_text_colour,
+                                RichText::new(format!("0x{:01$X}:", start_address, address_characters))
                                     .text_style(memory_editor_address_text_style),
                             );
 
@@ -164,7 +167,8 @@ impl<T> MemoryEditor<T> {
         let write_function = &self.write_function;
         let mut read_only = frame_data.selected_edit_address.is_none() || write_function.is_none();
 
-        for grid_column in 0..(options.column_count + 7) / 8 { // div_ceil
+        for grid_column in 0..(options.column_count + 7) / 8 {
+            // div_ceil
             let start_address = start_address + 8 * grid_column;
             // We use columns here instead of horizontal_for_text() to keep consistent spacing for non-monospace fonts.
             // When fonts are more customizable (e.g, we can accept a `Font` as a setting instead of `TextStyle`) I'd like
@@ -182,7 +186,9 @@ impl<T> MemoryEditor<T> {
                     let label_text = format!("{:02X}", mem_val);
 
                     // Memory Value Labels
-                    if !read_only && matches!(frame_data.selected_edit_address, Some(address) if address == memory_address) {
+                    if !read_only
+                        && matches!(frame_data.selected_edit_address, Some(address) if address == memory_address)
+                    {
                         // For Editing
                         let response = column.with_layout(Layout::right_to_left(), |ui| {
                             ui.add(
@@ -220,23 +226,25 @@ impl<T> MemoryEditor<T> {
                         }
                     } else {
                         // Read-only values.
-                        let mut label = Label::new(label_text)
-                            .text_style(options.memory_editor_text_style)
-                            .sense(Sense::click());
+                        let mut text = RichText::new(label_text).text_style(options.memory_editor_text_style);
 
-                        label = if options.show_zero_colour && mem_val == 0 {
-                            label.text_color(options.zero_colour)
+                        text = if options.show_zero_colour && mem_val == 0 {
+                            text.color(options.zero_colour)
                         } else {
-                            label.text_color(column.style().visuals.text_color())
+                            text.color(column.style().visuals.text_color())
                         };
 
                         if frame_data.should_highlight(memory_address) {
-                            label = label.text_color(options.highlight_colour);
+                            text = text.color(options.highlight_colour);
                         }
 
-                        if frame_data.should_subtle_highlight( memory_address, options.data_preview_options.selected_data_format) {
-                            label = label.background_color(column.style().visuals.code_bg_color);
+                        if frame_data
+                            .should_subtle_highlight(memory_address, options.data_preview_options.selected_data_format)
+                        {
+                            text = text.background_color(column.style().visuals.code_bg_color);
                         }
+
+                        let label = Label::new(text).sense(Sense::click());
 
                         // This particular layout is necessary to stop the memory values gradually shifting over to the right
                         // Presumably due to some floating point error when using left_to_right()
@@ -274,13 +282,20 @@ impl<T> MemoryEditor<T> {
                     }
 
                     let mem_val: u8 = (self.read_function)(memory, memory_address);
-                    let character = if !(32..128).contains(&mem_val) { '.' } else { mem_val as char };
-                    let mut label = egui::Label::new(character).text_style(options.memory_editor_ascii_text_style);
+                    let character = if !(32..128).contains(&mem_val) {
+                        '.'
+                    } else {
+                        mem_val as char
+                    };
+                    let mut text = RichText::new(character).text_style(options.memory_editor_ascii_text_style);
 
                     if self.frame_data.should_highlight(memory_address) {
-                        label = label.text_color(self.options.highlight_colour)
+                        text = text
+                            .color(self.options.highlight_colour)
                             .background_color(column.style().visuals.code_bg_color);
                     }
+
+                    let label = Label::new(text);
 
                     column.with_layout(Layout::bottom_up(Align::Center), |ui| {
                         ui.add(label);
@@ -329,7 +344,8 @@ impl<T> MemoryEditor<T> {
                 _ => unreachable!(),
             };
 
-            self.frame_data.set_selected_edit_address(Some(next_address), address_range);
+            self.frame_data
+                .set_selected_edit_address(Some(next_address), address_range);
             // Follow the edit cursor whilst moving with the arrow keys.
             //self.frame_data.goto_address_line = Some(next_address / self.options.column_count);
         }

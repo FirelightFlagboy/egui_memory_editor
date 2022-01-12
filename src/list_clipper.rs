@@ -53,7 +53,7 @@ impl ClippedScrollArea {
     /// [`Response::scroll_to_me`](egui::Response::scroll_to_me)
     #[allow(dead_code)]
     pub fn scroll_offset(mut self, offset: f32) -> Self {
-        self.scroll_area = self.scroll_area.scroll_offset(offset);
+        self.scroll_area = self.scroll_area.vertical_scroll_offset(offset);
         self
     }
 
